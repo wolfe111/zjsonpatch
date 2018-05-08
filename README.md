@@ -58,6 +58,11 @@ JsonNode target = JsonPatch.apply(JsonNode patch, JsonNode source);
 ```
 Given a Patch, it apply it to source Json and return a target json which can be ( json object or array or value ). This operation  performed on a clone of source json ( thus, source json is untouched and can be used further). 
 
+```xml
+JsonNode target = JsonPatch.applySkipOperations(JsonNode patch, JsonNode source, List<Operations> operations);
+```
+Given a Patch and a set of operations to ignore, it apply it to source Json, ignore chosen operators and return a target json which can be ( json object or array or value ). This operation  performed on a clone of source json ( thus, source json is untouched and can be used further). 
+
 ## To turn off MOVE & COPY Operations
 ```xml
 EnumSet<DiffFlags> flags = DiffFlags.dontNormalizeOpIntoMoveAndCopy().clone()
