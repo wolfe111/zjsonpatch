@@ -22,11 +22,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
+import static com.flipkart.zjsonpatch.Operation.*;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * User: holograph
@@ -106,6 +108,48 @@ public class ApiTest {
         JsonNode invalid = readTree("[{\"op\": \"what\"}]");
         JsonPatch.validate(invalid);
     }
+
+    @Test
+    public void applySkipOperationsMutatesSourceNoSkips() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        List<Operation> operationsToSkip = Arrays.asList(REMOVE, COPY);
+        JsonNode expected = newObjectNode().put("b", "b-value");
+        JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
+        assertNotEquals(source, newJson);
+        assertEquals(expected, newJson);
+    }
+
+    @Test
+    public void applySkipOperationsMutatesSourceNoSkipsAdd() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
+        ObjectNode source = newObjectNode();
+        List<Operation> operationsToSkip = Arrays.asList(ADD);
+        JsonNode expected = newObjectNode().put("b", "b-value");
+        JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
+        assertNotEquals(expected, newJson);
+        assertEquals(source, newJson);
+    }
+
+    @Test
+    public void applySkipOperationsMutatesSourceWithSkips() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"remove\", \"path\": \"/hello\"}]");
+        ObjectNode source = newObjectNode().put("hello", "test1");
+        List<Operation> operationsToSkip = Arrays.asList(COPY, REPLACE);
+        JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
+        assertNotEquals(source, newJson);
+    }
+
+    @Test
+    public void applySkipOperationMutatesSourceWithCompatibilityFlags() throws Exception {
+        JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\" }]");
+        ObjectNode source = newObjectNode();
+        List<Operation> operationsToSkip = Arrays.asList(REMOVE, REPLACE);
+        JsonNode actual = JsonPatch.applySkipOperations(patch, source, EnumSet.of(CompatibilityFlags.MISSING_VALUES_AS_NULLS), operationsToSkip);
+        assertTrue(actual.findValue("b").isNull());
+    }
+
+
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
