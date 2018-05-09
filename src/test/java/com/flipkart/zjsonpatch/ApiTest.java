@@ -113,7 +113,7 @@ public class ApiTest {
     public void applySkipOperationsMutatesSourceNoSkips() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
         ObjectNode source = newObjectNode();
-        List<Operation> operationsToSkip = Arrays.asList(REMOVE, COPY);
+        List<String> operationsToSkip = Arrays.asList("remove", "copy");
         JsonNode expected = newObjectNode().put("b", "b-value");
         JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
         assertNotEquals(source, newJson);
@@ -124,7 +124,7 @@ public class ApiTest {
     public void applySkipOperationsMutatesSourceNoSkipsAdd() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\", \"value\": \"b-value\" }]");
         ObjectNode source = newObjectNode();
-        List<Operation> operationsToSkip = Arrays.asList(ADD);
+        List<String> operationsToSkip = Arrays.asList("add");
         JsonNode expected = newObjectNode().put("b", "b-value");
         JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
         assertNotEquals(expected, newJson);
@@ -135,7 +135,7 @@ public class ApiTest {
     public void applySkipOperationsMutatesSourceWithSkips() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"remove\", \"path\": \"/hello\"}]");
         ObjectNode source = newObjectNode().put("hello", "test1");
-        List<Operation> operationsToSkip = Arrays.asList(COPY, REPLACE);
+        List<String> operationsToSkip = Arrays.asList("copy", "replace");
         JsonNode newJson = JsonPatch.applySkipOperations(patch, source, operationsToSkip);
         assertNotEquals(source, newJson);
     }
@@ -144,7 +144,7 @@ public class ApiTest {
     public void applySkipOperationMutatesSourceWithCompatibilityFlags() throws Exception {
         JsonNode patch = readTree("[{ \"op\": \"add\", \"path\": \"/b\" }]");
         ObjectNode source = newObjectNode();
-        List<Operation> operationsToSkip = Arrays.asList(REMOVE, REPLACE);
+        List<String> operationsToSkip = Arrays.asList("remove", "replace");
         JsonNode actual = JsonPatch.applySkipOperations(patch, source, EnumSet.of(CompatibilityFlags.MISSING_VALUES_AS_NULLS), operationsToSkip);
         assertTrue(actual.findValue("b").isNull());
     }

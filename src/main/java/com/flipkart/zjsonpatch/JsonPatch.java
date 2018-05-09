@@ -19,6 +19,7 @@ package com.flipkart.zjsonpatch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -60,7 +61,7 @@ public final class JsonPatch {
             processOperation(processor, flags, jsonNode, operation, path);
         }
     }
-    private static void process(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags, List<Operation> operationsToIgnore)
+    private static void process(JsonNode patch, JsonPatchProcessor processor, EnumSet<CompatibilityFlags> flags, List<String> operationsToIgnore)
             throws InvalidJsonPatchException {
 
         if (!patch.isArray())
@@ -71,7 +72,9 @@ public final class JsonPatch {
             Operation operation = Operation.fromRfcName(getPatchAttr(jsonNode, Constants.OP).toString().replaceAll("\"", ""));
             List<String> path = PathUtils.getPath(getPatchAttr(jsonNode, Constants.PATH));
 
-            if (!operationsToIgnore.contains(operation)) {
+            List<Operation> operationsToIgnoreEnumList = turnStringOperationsToEnums(operationsToIgnore);
+
+            if (!operationsToIgnoreEnumList.contains(operation)) {
                 processOperation(processor, flags, jsonNode, operation, path);
             }
         }
@@ -128,6 +131,15 @@ public final class JsonPatch {
         }
     }
 
+    private static List<Operation> turnStringOperationsToEnums (List<String> operations) {
+        List<Operation> newOperations = new ArrayList<Operation>();
+        for(String operation : operations) {
+            newOperations.add(Operation.fromRfcName(operation));
+        }
+
+        return newOperations;
+    }
+
 
     public static void validate(JsonNode patch, EnumSet<CompatibilityFlags> flags) throws InvalidJsonPatchException {
         process(patch, NoopProcessor.INSTANCE, flags);
@@ -147,11 +159,11 @@ public final class JsonPatch {
         return apply(patch, source, CompatibilityFlags.defaults());
     }
 
-    public static JsonNode applySkipOperations(JsonNode patch, JsonNode source, List<Operation> operationsToIgnore) throws JsonPatchApplicationException {
+    public static JsonNode applySkipOperations(JsonNode patch, JsonNode source, List<String> operationsToIgnore) throws JsonPatchApplicationException {
         return applySkipOperations(patch, source, CompatibilityFlags.defaults(), operationsToIgnore);
     }
 
-    public static JsonNode applySkipOperations(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, List<Operation> operationsToIgnore) throws JsonPatchApplicationException {
+    public static JsonNode applySkipOperations(JsonNode patch, JsonNode source, EnumSet<CompatibilityFlags> flags, List<String> operationsToIgnore) throws JsonPatchApplicationException {
         CopyingApplyProcessor processor = new CopyingApplyProcessor(source, flags);
         process(patch, processor, flags, operationsToIgnore);
         return processor.result();
